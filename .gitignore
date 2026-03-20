@@ -43,3 +43,7 @@ Thumbs.db
 .env
 .env.*
 
+# Team instruction notes (not part of the engine code)
+czlonek_1_polecenia.md
+czlonek_2_polecenia.md
+

@@ -1,149 +1,63 @@
-# ⚔️ my_rpg_engine - Projekt Zaliczeniowy OOP (Python)
+# ⚔️ my_rpg_engine
 
-**Autor:** [Twoje Imię i Nazwisko]
+## 1. Opis projektu
 
-**Przedmiot:** Programowanie Obiektowe (Semestr 4)
+System to tekstowy silnik symulujący potyczki w realiach gier RPG, pozwalający na obserwację turowych walk pomiędzy wygenerowanymi bohaterami. Rozwiązuje on problem żmudnego, ręcznego rozliczania statystyk i rzutów kośćmi, automatyzując mechanikę starć, obliczanie obrażeń oraz zarządzanie ekwipunkiem. Z perspektywy gracza jest to interaktywne narzędzie, które w przejrzysty sposób raportuje każde wydarzenie na arenie, ułatwiając śledzenie losów poszukiwaczy przygód oraz stanu ich rynsztunku.
 
-**Cel projektu:** Stworzenie tekstowego silnika gry RPG realizującego zasady SOLID, wzorce projektowe (Factory, Observer) oraz 4 filary OOP.
+## 2. Autorzy i podział pracy
 
----
 
-## 1. User Stories (Historyjki Użytkownika)
+| Imię i Nazwisko        | Zakres odpowiedzialności                                                                                                                                                                                                                                                  |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Michał Głowacki**    | Lider zespołu, zarządzanie projektem i podział zadań. Opracowanie głównych założeń architektonicznych, implementacja klas abstrakcyjnych i bazowych (`Item`, `Weapon`, `Character`), systemu ekwipunku (`Inventory`) oraz mechanizmu logowania (`EventLogger`).           |
+| **Szymon Grzelak**     | Implementacja mechaniki walki. Zaprogramowanie pętli starcia (klasa `Battle`), stworzenie klasy `Warrior` i przedmiotu `Sword` wraz z logiką psucia się oręża, oraz napisanie testów jednostkowych starć w frameworku pytest.                                             |
+| **Mateusz Rybczyński** | Implementacja systemu magii, wzorca kreacyjnego oraz integracja. Stworzenie klasy `Mage` i przedmiotu leczniczego `Potion`, zaprogramowanie fabryki postaci (`CharacterFactory`), przygotowanie głównego skryptu symulacji (`main.py`) oraz testów jednostkowych fabryki. |
 
-1. **Jako gracz,** chcę, aby proces tworzenia bohatera był zautomatyzowany (Wojownik, Mag, Łucznik), aby natychmiast otrzymać postać z podstawowym ekwipunkiem.
-2. **Jako poszukiwacz przygód,** chcę dodawać i usuwać przedmioty z ekwipunku, aby zarządzać swoimi zasobami.
-3. **Jako taktyk,** chcę dbać o stan mojej broni (wytrzymałość/durability), a w razie jej zużycia móc użyć zestawu naprawczego, aby przywrócić jej pełne obrażenia.
-4. **Jako ranny bohater,** chcę używać mikstur leczniczych w trakcie walki, aby uniknąć śmierci.
-5. **Jako programista/gracz,** chcę czytać przejrzysty log ze wszystkich wydarzeń (walka, podnoszenie przedmiotów), który jest niezależny od logiki samej gry.
 
----
+## 3. Lista klas z opisami
 
-## 2. Architektura i Diagram Klas
 
-Projekt wykorzystuje minimum 8 klas i realizuje zaawansowane relacje obiektowe. Warstwa logiki (postacie, walka) jest oddzielona od warstwy prezentacji (wyświetlanie tekstu) za pomocą wzorca **Observer**.
+| Nazwa klasy        | Opis                                                                                                                                | Główne atrybuty                 | Główne metody                                                    |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- | ---------------------------------------------------------------- |
+| `Item`             | Abstrakcyjna klasa bazowa dla wszystkich przedmiotów w grze. Definiuje wspólny interfejs dla rzeczy, które można posiadać i używać. | `name`                          | `__init__()`, `use()`                                            |
+| `Weapon`           | Abstrakcyjna klasa bazowa dla broni palnej i białej. Wprowadza mechanikę wytrzymałości, która wpływa na efektywność przedmiotu.     | `name`, `damage`, `_durability` | `calculate_effective_damage()`, `decrease_durability()`, `use()` |
+| `Sword`            | Konkretna implementacja broni białej. Służy do zadawania obrażeń fizycznych przeciwnikowi w trakcie walki.                          | Dziedziczone z `Weapon`         | `use()`                                                          |
+| `Potion`           | Konkretny przedmiot użytkowy (konsumpcyjny). Służy do przywracania punktów zdrowia postaciom w krytycznych momentach.               | `heal_amount`                   | `use()`                                                          |
+| `Character`        | Abstrakcyjna klasa bazowa postaci. Reprezentuje dowolną żywą jednostkę biorącą udział w symulacji, posiadającą zdrowie i ekwipunek. | `name`, `health`, `inventory`   | `__init__()`, `take_damage()`, `attack()`                        |
+| `Warrior`          | Konkretna implementacja bohatera walczącego wręcz. Specjalizuje się w wykorzystywaniu broni do zadawania ciosów.                    | Dziedziczone z `Character`      | `attack()`                                                       |
+| `Mage`             | Konkretna implementacja bohatera posługującego się magią. Potrafi leczyć się miksturami lub zadawać magiczne obrażenia.             | Dziedziczone z `Character`      | `attack()`                                                       |
+| `Inventory`        | Zarządca ekwipunku pojedynczej postaci. Przechowuje przedmioty, pozwalając na ich dodawanie i usuwanie.                             | `_items`                        | `add_item()`, `remove_item()`, `get_items()`                     |
+| `EventLogger`      | Niezależny system rejestrujący historię wydarzeń. Służy do oddzielenia warstwy informacyjnej (wyświetlania) od logiki gry.          | `_logs`                         | `log()`, `get_logs()`                                            |
+| `Battle`           | Silnik pojedynczego starcia turowego. Nadzoruje przebieg walki pomiędzy dwoma bohaterami do momentu śmierci jednego z nich.         | `hero`, `enemy`, `logger`       | `run()`, `_execute_turn()`                                       |
+| `CharacterFactory` | Fabryka generująca gotowych do gry bohaterów. Automatycznie przypisuje im odpowiedni sprzęt startowy.                               | Brak (metody statyczne)         | `create_warrior()`, `create_mage()`                              |
 
-### Kluczowe Relacje (UML):
 
-- **Kompozycja:** `Character ◆── Inventory` (Ekwipunek ginie razem z postacią).
-- **Agregacja:** `Inventory ◇── Item` (Przedmioty mogą istnieć poza ekwipunkiem).
-- **Asocjacja:** `Battle ── Character` (Bitwa przeprowadza interakcję między niezależnymi postaciami).
-- **Zależność (Dependency):** `CharacterFactory ──> Character` (Fabryka tworzy obiekty postaci).
+## 4. Relacje między klasami
 
-### Diagram Klas (Mermaid)
+- **Kompozycja:** Pomiędzy klasą `Character` a `Inventory`. Ekwipunek jest nierozłączną częścią bohatera – jeśli obiekt postaci zostanie usunięty lub zniszczony, jej zarządzający plecak (`Inventory`) również przestaje istnieć, ponieważ nie ma racji bytu bez właściciela.
+- **Agregacja:** Pomiędzy klasą `Inventory` a `Item`. Plecak gromadzi przedmioty, jednak obiekty typu `Item` mogą istnieć niezależnie w świecie gry. Po usunięciu obiektu `Inventory`, same przedmioty nie muszą zostać usunięte z pamięci (mogą leżeć na ziemi).
+- **Asocjacja:** Pomiędzy klasą `Battle` a klasami `Character`. Bitwa tymczasowo korzysta z dwóch postaci w celu przeprowadzenia interakcji (walki), ale nie jest ich właścicielem. Gdy bitwa się zakończy i obiekt `Battle` zostanie usunięty, obiekty walczących postaci (szczególnie zwycięzcy) nadal istnieją.
+- **Dziedziczenie:** Klasy `Warrior` i `Mage` dziedziczą po abstrakcyjnej klasie `Character`, a `Sword` i `Potion` po `Item` (oraz `Weapon`). Klasy pochodne przejmują interfejs klas bazowych (np. atrybut `health`), ale rozbudowują je o unikalne zachowania specjalistyczne (np. różne sposoby ataku).
 
-```mermaid
-classDiagram
-    class EventLogger {
-        +log(message: String)
-        +save_to_file()
-    }
+## 5. Planowane funkcjonalności
 
-    class CharacterFactory {
-        +create_character(char_type: String, name: String) Character
-    }
+- Automatyczne tworzenie i inicjalizowanie postaci ze startowym rynsztunkiem na podstawie wybranego archetypu (Wojownik/Mag).
+- Symulacja automatycznej walki turowej pomiędzy dwiema postaciami na zamkniętej arenie, kontynuowana aż do osiągnięcia zera punktów zdrowia przez jednego z nich.
+- Zarządzanie ekwipunkiem postaci, obejmujące przechowywanie, dobywanie oraz używanie przedmiotów w trakcie walki.
+- Dynamiczne śledzenie wytrzymałości uzbrojenia – obniżanie atrybutu `_durability` przy każdym ataku oraz drastyczne zmniejszenie obrażeń po zniszczeniu broni.
+- Scentralizowane logowanie wszystkich wydarzeń, akcji bohaterów i zmian statystyk bez ingerencji w stan wewnętrzny modeli.
 
-    class Character {
-        <<abstract>>
-        +String name
-        +int health
-        +Inventory inventory
-        +attack(target: Character)*
-        +take_damage(amount: int)
-    }
+## 6. User Stories
 
-    class Warrior { +attack(target: Character) }
-    class Mage { +attack(target: Character) }
+1. Jako strateg chcę śledzić niezależny dziennik wydarzeń tekstowych z całej bitwy, żeby dokładnie przeanalizować historię wykonanych akcji i przebieg starcia bez zaglądania w kod.
+2. Jako zarządca ekwipunku chcę, aby wytrzymałość broni spadała z każdym atakiem bohatera, żeby mechanika gry realistycznie symulowała zużycie sprzętu w trakcie jego używania.
+3. Jako twórca symulacji chcę szybko generować gotowe postacie z domyślnym uzbrojeniem, żeby móc od razu rozpocząć testowanie pętli walki bez ręcznego tworzenia przedmiotów.
 
-    Character <|-- Warrior
-    Character <|-- Mage
+## 7. Mechanizmy OOP
 
-    class Item {
-        <<abstract>>
-        +String name
-        +use(target: Character)*
-    }
 
-    class Weapon {
-        <<abstract>>
-        +int damage
-        -int _durability
-        +int durability
-    }
+| Mechanizm      | Gdzie zastosowano                                      | Opis działania                                                                     |
+| -------------- | ------------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| **Abstrakcja** | Moduł `base.py` (klasy `Item`, `Weapon`, `Character`). | Narzuca "kontrakt" używając modułu `abc`. Metody takie jak `use()` są wymuszone za |
 
-    class Potion { +int heal_amount }
-    class RepairKit { +int repair_amount }
-    class Sword { }
 
-    Item <|-- Weapon
-    Item <|-- Potion
-    Item <|-- RepairKit
-    Weapon <|-- Sword
-
-    class Inventory {
-        -List~Item~ items
-        +add_item(item: Item)
-        +remove_item(item: Item)
-    }
-
-    class Battle {
-        +Character hero
-        +Character enemy
-        +execute_turn()
-    }
-
-    Character "1" *-- "1" Inventory : Kompozycja
-    Inventory "1" o-- "0..*" Item : Agregacja
-    Battle "1" -- "2" Character : Asocjacja
-    CharacterFactory ..> Character : Tworzy
-```
-
-## 3. Realizacja Wymagań Technicznych (Mapa Projektu)
-
-### 4 Filary OOP:
-
-- **Abstrakcja:** Moduł abc dla bazowych klas Character i Item.
-- **Hermetyzacja (@property):** Zastosowana m.in. w klasie Weapon. Atrybut prywatny _durability jest modyfikowany przez setter. Jeśli spadnie do 0, metoda obliczająca obrażenia redukuje atak bohatera do minimum (walka wręcz).
-- **Dziedziczenie:** Hierarchia przedmiotów (Item -> Weapon -> Sword) oraz postaci (Character -> Mage).
-- **Polimorfizm:** Różne implementacje metody attack() (Wojownik zużywa broń, Mag zużywa manę) oraz use() w przedmiotach.
-
-### Wzorce Projektowe (Bonus):
-
-- **Factory Method:** CharacterFactory zarządza tworzeniem postaci i ich startowym ekwipunkiem.
-- **Observer (Logger):** Klasy nie używają print(). Zamiast tego wysyłają komunikaty do EventLogger, co spełnia zasadę Single Responsibility Principle (SRP) z SOLID.
-
-### Metody specjalne (Dunder methods)
-
-- **Metody specjalne (Dunder methods):** __str__ / __repr__ dla czytelnego wyświetlania logów i ekwipunku, __eq__ do porównywania i usuwania przedmiotów.
-
-### Jakość kodu
-
-- **Jakość kodu:** Typowanie (Type Hints), dokumentacja (Docstrings) oraz minimum 10 testów (pytest).
-
-## 4. Plan Implementacji
-
-- **Etap 1:** Fundamenty (Przedmioty i Hermetyzacja) - Definicja klas Item, Weapon z mechaniką durability (@property) oraz przedmiotów użytkowych (RepairKit, Potion).
-- **Etap 2:** Logowanie i Ekwipunek - Wdrożenie EventLogger oraz klasy Inventory (kompozycja/agregacja).
-- **Etap 3:** Aktorzy i Fabryka - Klasy Character, implementacja Warrior/Mage oraz stworzenie CharacterFactory.
-- **Etap 4:** Silnik (Walka i Spięcie całości) - Klasa Battle obsługująca tury, testy jednostkowe pytest weryfikujące poprawność zużycia broni i obrażeń.
-
-## 5. Struktura Katalogów
-
-```text
-my_rpg_engine/
-├── engine/
-│   ├── __init__.py
-│   ├── base.py            # Klasy abstrakcyjne (Item, Character)
-│   ├── items.py           # Klasy dziedziczące po Item (wytrzymałość broni)
-│   ├── characters.py      # Klasy postaci
-│   ├── factory.py         # CharacterFactory (Wzorzec Fabryki)
-│   ├── inventory.py       # Ekwipunek (Kompozycja i agregacja)
-│   ├── combat.py          # Logika walki (Battle)
-│   └── logger.py          # EventLogger (Wzorzec Obserwatora)
-├── tests/
-│   ├── __init__.py
-│   ├── test_items.py      # Testy durability i ekwipunku
-│   └── test_combat.py
-├── main.py                # Skrypt demonstracyjny gry
-├── requirements.txt       # pytest
-└── README.md              # Niniejszy dokument
-```

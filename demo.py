@@ -1,4 +1,4 @@
-"""Demonstration script for the RPG engine (spec section 2.5)."""
+"""Demonstration script for the RPG engine (spec sections 2.5 and 4)."""
 
 from __future__ import annotations
 
@@ -9,6 +9,7 @@ from engine.factory import CharacterFactory
 from engine.game_world import GameWorld
 from engine.items import Armor, Potion, Sword
 from engine.logger import EventLogger
+from engine.quest import Quest, QuestObjective
 
 
 def _log_character_stats(logger: EventLogger, character: Character, label: str) -> None:
@@ -35,7 +36,7 @@ def _log_battle(logger: EventLogger, battle: Battle, winner: Character) -> None:
 
 
 def main() -> None:
-    """Run the seven demonstration scenarios from the project specification."""
+    """Run demonstration scenarios from the project specification."""
     logger = EventLogger()
     world = GameWorld()
 
@@ -68,8 +69,25 @@ def main() -> None:
     except InventoryFullError as exc:
         logger.log(f"Expected InventoryFullError: {exc}")
 
-    logger.log("=== 5. Turn-based battle ===")
-    battle = world.start_battle(warrior, archer)
+    logger.log("=== 5. Turn-based battle (with potion mid-fight) ===")
+    battle_potion = Potion(name="Battle Flask", heal_amount=40)
+    warrior.inventory.add(battle_potion)
+    battle = world.start_battle(warrior, mage)
+
+    for turn_index in range(6):
+        if warrior.hp <= 0 or mage.hp <= 0:
+            break
+        use_special = battle.attacker is mage
+        battle.execute_turn(use_special=use_special)
+
+    if warrior.hp < warrior.max_hp:
+        potion_name = battle_potion.name
+        healed = warrior.use_potion(battle_potion)
+        logger.log(
+            f"Mid-battle: {warrior.name} used {potion_name}, "
+            f"healed {healed} HP (now {warrior.hp}/{warrior.max_hp})"
+        )
+
     winner = battle.auto_battle(max_turns=20)
     _log_battle(logger, battle, winner)
 
@@ -81,16 +99,31 @@ def main() -> None:
         f"leveled_up={leveled_up}"
     )
 
-    logger.log("=== 7. Potion use in combat context ===")
-    healer = CharacterFactory.create_healer("Mercy")
-    world.add_character(healer)
-    healer.take_damage(40)
-    potion = next(item for item in healer.inventory if isinstance(item, Potion))
-    potion_name = potion.name
-    healed = healer.use_potion(potion)
+    logger.log("=== 7. Polymorphism - special_attack on heterogeneous list ===")
+    party: list[Character] = [warrior, mage, archer]
+    for character in party:
+        action, damage = character.special_attack()
+        logger.log(
+            f"{character.name} ({character.char_class()}): "
+            f"{action} -> {damage} dmg"
+        )
+
+    logger.log("=== 8. Quest lifecycle ===")
+    quest = Quest(
+        "Defeat the Bandits",
+        objectives=[QuestObjective("Defeat bandits", target_count=2)],
+        xp_reward=100,
+        gold_reward=50,
+    )
+    world.add_quest(quest)
+    quest.accept()
+    logger.log(f"Quest accepted: {quest.title} [{quest.status.value}]")
+    quest.objectives[0].advance(2)
+    mage_level_before = mage.level
+    xp_reward, gold_reward = world.complete_quest(quest, mage)
     logger.log(
-        f"{healer.name} used {potion_name}: healed {healed} HP, "
-        f"current HP={healer.hp}/{healer.max_hp}"
+        f"Quest completed: +{xp_reward} XP, +{gold_reward} gold, "
+        f"{mage.name} level {mage_level_before} -> {mage.level}"
     )
 
     logger.log("=== World report ===")

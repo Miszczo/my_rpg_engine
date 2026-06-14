@@ -63,6 +63,7 @@ class Character(ABC):
 
     @hp.setter
     def hp(self, value: int) -> None:
+        """Set HP with clamping to the range ``[0, max_hp]``."""
         self._hp = max(0, min(value, self._max_hp))
 
     @property
@@ -169,23 +170,27 @@ class Character(ABC):
         return leveled_up
 
     def __repr__(self) -> str:
+        """Return a developer-friendly representation with id, name, and level."""
         return (
             f"{self.__class__.__name__}(id={self._id}, name={self.name!r}, "
             f"level={self._level})"
         )
 
     def __str__(self) -> str:
+        """Return a user-friendly summary of name, level, class, and HP."""
         return (
             f"{self.name} (Level {self._level} {self.char_class()}, "
             f"HP: {self.hp}/{self.max_hp})"
         )
 
     def __eq__(self, other: object) -> bool:
+        """Compare characters by unique ``_id``."""
         if not isinstance(other, Character):
             return NotImplemented
         return self._id == other._id
 
     def __lt__(self, other: object) -> bool:
+        """Order characters by level for sorting."""
         if not isinstance(other, Character):
             return NotImplemented
         return self._level < other._level
@@ -197,12 +202,15 @@ class Warrior(Character):
     HEROIC_STRIKE_BONUS: int = 10
 
     def __init__(self, name: str) -> None:
+        """Create a warrior with high HP, strength, and defense."""
         super().__init__(name, max_hp=120, strength=14, defense=8)
 
     def char_class(self) -> str:
+        """Return the warrior class label."""
         return "Warrior"
 
     def special_attack(self) -> tuple[str, int]:
+        """Perform Heroic Strike for bonus physical damage."""
         return ("Heroic Strike", self.attack_power + self.HEROIC_STRIKE_BONUS)
 
 
@@ -213,6 +221,7 @@ class Mage(Character):
     FIREBALL_DAMAGE: int = 40
 
     def __init__(self, name: str) -> None:
+        """Create a mage with a mana pool for spellcasting."""
         super().__init__(name, max_hp=80, strength=8, defense=5)
         self._max_mana = 100
         self._mana = 100
@@ -224,6 +233,7 @@ class Mage(Character):
 
     @mana.setter
     def mana(self, value: int) -> None:
+        """Set mana with clamping to the range ``[0, max_mana]``."""
         self._mana = max(0, min(value, self._max_mana))
 
     @property
@@ -232,9 +242,11 @@ class Mage(Character):
         return self._max_mana
 
     def char_class(self) -> str:
+        """Return the mage class label."""
         return "Mage"
 
     def special_attack(self) -> tuple[str, int]:
+        """Cast Fireball or fall back to a basic attack when mana is low."""
         if self.mana < self.FIREBALL_COST:
             return ("Basic Attack", self.attack_power)
         self.mana -= self.FIREBALL_COST
@@ -247,12 +259,15 @@ class Archer(Character):
     PIERCING_SHOT_BONUS: int = 12
 
     def __init__(self, name: str) -> None:
+        """Create an archer with balanced ranged combat stats."""
         super().__init__(name, max_hp=90, strength=12, defense=6)
 
     def char_class(self) -> str:
+        """Return the archer class label."""
         return "Archer"
 
     def special_attack(self) -> tuple[str, int]:
+        """Perform Piercing Shot for bonus ranged damage."""
         return ("Piercing Shot", self.attack_power + self.PIERCING_SHOT_BONUS)
 
 
@@ -264,6 +279,7 @@ class Healer(Character):
     HEAL_ALLY_MANA_COST: int = 15
 
     def __init__(self, name: str) -> None:
+        """Create a healer with a mana pool for support abilities."""
         super().__init__(name, max_hp=100, strength=9, defense=7)
         self._max_mana = 120
         self._mana = 120
@@ -275,6 +291,7 @@ class Healer(Character):
 
     @mana.setter
     def mana(self, value: int) -> None:
+        """Set mana with clamping to the range ``[0, max_mana]``."""
         self._mana = max(0, min(value, self._max_mana))
 
     @property
@@ -283,9 +300,11 @@ class Healer(Character):
         return self._max_mana
 
     def char_class(self) -> str:
+        """Return the healer class label."""
         return "Healer"
 
     def special_attack(self) -> tuple[str, int]:
+        """Cast Holy Smite or fall back to a basic attack when mana is low."""
         if self.mana < self.HOLY_SMITE_COST:
             return ("Basic Attack", self.attack_power)
         self.mana -= self.HOLY_SMITE_COST

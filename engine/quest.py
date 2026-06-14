@@ -129,6 +129,7 @@ class Quest:
         self.status = QuestStatus.FAILED
 
     def __repr__(self) -> str:
+        """Return a developer-friendly representation with id, title, and status."""
         return (
             f"Quest(id={self._id}, title={self.title!r}, "
             f"status={self.status.value})"

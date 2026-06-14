@@ -16,6 +16,7 @@ class Inventory:
     """
 
     def __init__(self, capacity: int = 20) -> None:
+        """Initialize an empty inventory with the given capacity."""
         self._items: list[Item] = []
         self._capacity = capacity
         self._equipped_weapon: Weapon | None = None
@@ -125,13 +126,17 @@ class Inventory:
         return self._equipped_weapon.calculate_effective_damage()
 
     def __len__(self) -> int:
+        """Return the number of items currently stored."""
         return len(self._items)
 
     def __iter__(self) -> Iterator[Item]:
+        """Iterate over stored items in insertion order."""
         return iter(self._items)
 
     def __contains__(self, item: object) -> bool:
+        """Return True when ``item`` is stored in this inventory."""
         return item in self._items
 
     def __getitem__(self, index: int) -> Item:
+        """Return the item at the given index."""
         return self._items[index]

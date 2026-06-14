@@ -96,6 +96,7 @@ class Battle:
         return self._determine_winner()
 
     def __len__(self) -> int:
+        """Return the number of recorded battle log entries."""
         return len(self.logs)
 
     def _degrade_attacker_weapon(self) -> None:

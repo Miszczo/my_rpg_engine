@@ -116,6 +116,7 @@ class GameWorld:
             ) from exc
 
     def __contains__(self, obj: object) -> bool:
+        """Return True when a character or quest is registered in this world."""
         if isinstance(obj, Character):
             return obj._id in self._characters
         if isinstance(obj, Quest):
@@ -123,9 +124,11 @@ class GameWorld:
         return False
 
     def __len__(self) -> int:
+        """Return the number of registered characters."""
         return len(self._characters)
 
     def __iter__(self) -> Iterator[Character]:
+        """Iterate over registered characters."""
         return iter(self._characters.values())
 
     def _ensure_character_registered(self, character: Character) -> None:

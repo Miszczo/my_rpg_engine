@@ -16,6 +16,13 @@ Specyfikacja sugeruje strukturę `src/game/`, lecz repozytorium było już zorga
 | `quest.py`    | `engine/quest.py`    |
 | `game_world.py` | `engine/game_world.py` |
 
+**Rozszerzenia poza szkieletem §3** (nie zmieniają API specyfikacji):
+
+| Moduł | Rola |
+|-------|------|
+| `engine/factory.py` | `CharacterFactory` — szybkie tworzenie postaci z domyślnym ekwipunkiem (demo, testy) |
+| `engine/logger.py` | `EventLogger` — formatowanie outputu w warstwie prezentacji |
+
 Publiczne API pozostaje spójne ze specyfikacją §3 (nazwy metod: `hp`, `special_attack`, `add`, `execute_turn` itd.).
 
 ## 2. `EventLogger` wyłącznie w warstwie prezentacji
@@ -36,13 +43,13 @@ Implementacja: `engine/combat.py:Battle._determine_winner`.
 
 ## 4. Założenia implementacyjne poza szkieletem §3
 
-| Obszar | Przyjęta reguła |
-|--------|-----------------|
-| Bonus obrony od poziomu | `(level - 1) * 1` |
-| `Item.__eq__` | porównanie po `_id` |
-| `Inventory.remove` / brak przedmiotu | `InvalidItemError` |
-| `Mage.special_attack` przy braku many | fallback `"Basic Attack"` + `attack_power` |
-| `Healer.heal_ally` przy braku many | `InsufficientStatsError` |
-| `GameWorld.add_quest` | rejestracja questów (symetria do `add_character`) |
+| Obszar | Przyjęta reguła | Test |
+|--------|-----------------|------|
+| Bonus obrony od poziomu | `(level - 1) * 1` | `tests/test_justification.py:test_justification_defense_level_bonus` |
+| `Item.__eq__` | porównanie po `_id` | `tests/test_justification.py:test_justification_item_eq_by_id` |
+| `Inventory.remove` / brak przedmiotu | `InvalidItemError` | `tests/test_justification.py:test_justification_inventory_remove_missing_item` |
+| `Mage.special_attack` przy braku many | fallback `"Basic Attack"` + `attack_power` | `tests/test_justification.py:test_justification_mage_special_attack_fallback` |
+| `Healer.heal_ally` przy braku many | `InsufficientStatsError` | `tests/test_characters.py:test_scenario_07_insufficient_mana_raises_error` |
+| `GameWorld.add_quest` | rejestracja questów (symetria do `add_character`) | `tests/test_quest.py:test_scenario_08_gain_xp_and_level_up_via_quest` |
 
-Te reguły są pokryte testami w `tests/` (scenariusze §2.6).
+Reguły z kolumny „Test” są pokryte dedykowanymi testami. Pozostałe założenia (np. remis w `auto_battle`) weryfikowane przez inspekcję kodu i `demo.py`.

@@ -63,17 +63,20 @@ class Item(ABC):
         """Return a human-readable description of the item's effect."""
 
     def __repr__(self) -> str:
+        """Return a developer-friendly representation with id and metadata."""
         return (
             f"{self.__class__.__name__}(id={self._id}, name={self.name!r}, "
             f"value={self.value}, rarity={self.rarity.value})"
         )
 
     def __eq__(self, other: object) -> bool:
+        """Compare items by unique ``_id``."""
         if not isinstance(other, Item):
             return NotImplemented
         return self._id == other._id
 
     def __lt__(self, other: object) -> bool:
+        """Order items by monetary value for sorting."""
         if not isinstance(other, Item):
             return NotImplemented
         return self.value < other.value
@@ -114,6 +117,7 @@ class Weapon(Item, ABC):
 
     @durability.setter
     def durability(self, value: int) -> None:
+        """Set durability with a lower bound of zero."""
         self._durability = max(0, value)
 
     @property
@@ -165,9 +169,11 @@ class Sword(Weapon):
         )
 
     def item_type(self) -> str:
+        """Return the sword item type label."""
         return "sword"
 
     def use_description(self) -> str:
+        """Describe the sword's damage potential."""
         return f"A sword that deals up to {self.damage} damage."
 
 
@@ -201,9 +207,11 @@ class Staff(Weapon):
         return self._mana_cost
 
     def item_type(self) -> str:
+        """Return the staff item type label."""
         return "staff"
 
     def use_description(self) -> str:
+        """Describe the staff's damage and mana cost."""
         return (
             f"A staff that deals up to {self.damage} damage "
             f"(mana cost: {self.mana_cost})."
@@ -246,9 +254,11 @@ class Armor(Item):
         self.slot = slot
 
     def item_type(self) -> str:
+        """Return the armor item type label."""
         return "armor"
 
     def use_description(self) -> str:
+        """Describe the armor slot and defense bonus."""
         return f"Armor for the {self.slot} slot providing {self.defense} defense."
 
 
@@ -270,9 +280,11 @@ class Potion(Item):
         self.mana_restore = mana_restore
 
     def item_type(self) -> str:
+        """Return the potion item type label."""
         return "potion"
 
     def use_description(self) -> str:
+        """Describe the potion's restorative effects."""
         effects: list[str] = []
         if self.heal_amount > 0:
             effects.append(f"restores {self.heal_amount} HP")

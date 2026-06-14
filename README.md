@@ -112,9 +112,3 @@ python main.py
 ```bash
 pytest
 ```
-
-## Historia zmian
-
-- Zaktualizowano `README.md` (pełna przebudowa treści) w celu pełnej zgodności z `README_wytyczne.md` oraz włączenia szczegółów ze specyfikacji `Projekt_C_RPG_Game_Engine.md`.
-
-

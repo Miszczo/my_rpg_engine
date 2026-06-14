@@ -80,6 +80,39 @@ Każda relacja została dobrana wg znaczenia semantycznego: kompozycja dla silne
 | **Enumy**                | `Rarity`, `QuestStatus`                                   | Bezpieczne, czytelne i jednoznaczne reprezentowanie stałych stanów i kategorii w systemie.                |
 | **Dataclasses**          | `BattleLog`, `QuestObjective`                              | Proste, deklaratywne struktury danych do zapisu stanu i logiki postępu questa/bitwy.                      |
 
+## 8. Uruchomienie
+
+### Wymagania
+
+- Python 3.10+
+- Zależności z pliku `requirements.txt`
+
+### Instalacja
+
+```bash
+pip install -r requirements.txt
+```
+
+### Demo
+
+```bash
+python demo.py
+```
+
+Alternatywnie:
+
+```bash
+python main.py
+```
+
+(`main.py` deleguje do `demo.main()`.)
+
+### Testy
+
+```bash
+pytest
+```
+
 ## Historia zmian
 
 - Zaktualizowano `README.md` (pełna przebudowa treści) w celu pełnej zgodności z `README_wytyczne.md` oraz włączenia szczegółów ze specyfikacji `Projekt_C_RPG_Game_Engine.md`.

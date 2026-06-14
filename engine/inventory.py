@@ -1,74 +1,137 @@
-"""
-Inventory implementation.
-"""
+"""Character inventory with capacity limits and equipment slots."""
 
 from __future__ import annotations
 
-from typing import List, Optional
+from collections.abc import Iterator
 
-from engine.base import Item
+from engine.exceptions import InvalidItemError, InventoryFullError
+from engine.items import Armor, Item, Weapon
 
 
 class Inventory:
-    """Store a character's items.
+    """Store items and track equipped weapon and armor.
 
-    Inventory manages adding and removing items and can optionally write
-    actions to an :class:`~engine.logger.EventLogger`.
-
-    :param logger: Optional event logger instance.
+    Args:
+        capacity: Maximum number of items the inventory can hold.
     """
 
-    _items: List[Item]
-    _logger: Optional["EventLogger"]
-
-    def __init__(self, logger: Optional["EventLogger"] = None) -> None:
-        """Create a new inventory.
-
-        :param logger: Optional event logger instance.
-        :return: None
-        """
-
-        self._items = []
-        self._logger = logger
-
-    def add_item(self, item: Item) -> None:
-        """Add an item to the inventory.
-
-        :param item: Item instance to add.
-        :return: None
-        """
-
-        self._items.append(item)
-        if self._logger is not None:
-            self._logger.log(f"Added: {item.name}")
-
-    def remove_item(self, item: Item) -> None:
-        """Remove an item from the inventory.
-
-        :param item: Item instance to remove.
-        :return: None
-        :raises ValueError: If the item is not present in the inventory.
-        """
-
-        try:
-            self._items.remove(item)
-        except ValueError as exc:
-            raise ValueError("Item not found in inventory.") from exc
-
-        if self._logger is not None:
-            self._logger.log(f"Removed: {item.name}")
+    def __init__(self, capacity: int = 20) -> None:
+        self._items: list[Item] = []
+        self._capacity = capacity
+        self._equipped_weapon: Weapon | None = None
+        self._equipped_armor: Armor | None = None
 
     @property
-    def items(self) -> List[Item]:
-        """Return a copy of stored items.
+    def capacity(self) -> int:
+        """Maximum number of items this inventory can store."""
+        return self._capacity
 
-        :return: List of items.
+    @property
+    def equipped_weapon(self) -> Weapon | None:
+        """Currently equipped weapon, if any."""
+        return self._equipped_weapon
+
+    @property
+    def equipped_armor(self) -> Armor | None:
+        """Currently equipped armor piece, if any."""
+        return self._equipped_armor
+
+    def add(self, item: Item) -> None:
+        """Add an item to the inventory.
+
+        Args:
+            item: Item instance to store.
+
+        Raises:
+            InventoryFullError: If the inventory has reached capacity.
         """
+        if len(self._items) >= self._capacity:
+            raise InventoryFullError(
+                f"Inventory is full (capacity={self._capacity})."
+            )
+        self._items.append(item)
 
-        return list(self._items)
+    def remove(self, item: Item) -> Item:
+        """Remove an item from the inventory.
+
+        Args:
+            item: Item instance to remove.
+
+        Returns:
+            The removed item instance.
+
+        Raises:
+            InvalidItemError: If the item is not present in the inventory.
+        """
+        if item not in self._items:
+            raise InvalidItemError(f"Item {item.name!r} not found in inventory.")
+        self._items.remove(item)
+        if self._equipped_weapon is item:
+            self._equipped_weapon = None
+        if self._equipped_armor is item:
+            self._equipped_armor = None
+        return item
+
+    def equip_weapon(self, weapon: Weapon) -> None:
+        """Equip a weapon from the inventory.
+
+        Args:
+            weapon: Weapon instance to equip.
+
+        Raises:
+            InvalidItemError: If ``weapon`` is not a ``Weapon`` or not in the
+                inventory.
+        """
+        if not isinstance(weapon, Weapon):
+            raise InvalidItemError(
+                f"Cannot equip {type(weapon).__name__}; expected Weapon."
+            )
+        if weapon not in self._items:
+            raise InvalidItemError(
+                f"Weapon {weapon.name!r} is not in the inventory."
+            )
+        self._equipped_weapon = weapon
+
+    def equip_armor(self, armor: Armor) -> None:
+        """Equip an armor piece from the inventory.
+
+        Args:
+            armor: Armor instance to equip.
+
+        Raises:
+            InvalidItemError: If ``armor`` is not ``Armor`` or not in the
+                inventory.
+        """
+        if not isinstance(armor, Armor):
+            raise InvalidItemError(
+                f"Cannot equip {type(armor).__name__}; expected Armor."
+            )
+        if armor not in self._items:
+            raise InvalidItemError(
+                f"Armor {armor.name!r} is not in the inventory."
+            )
+        self._equipped_armor = armor
+
+    def get_defense(self) -> int:
+        """Return defense bonus from equipped armor."""
+        if self._equipped_armor is None:
+            return 0
+        return self._equipped_armor.defense
+
+    def get_damage(self) -> int:
+        """Return effective damage from the equipped weapon."""
+        if self._equipped_weapon is None:
+            return 0
+        return self._equipped_weapon.calculate_effective_damage()
 
     def __len__(self) -> int:
-        """Return number of items in the inventory."""
-
         return len(self._items)
 
+    def __iter__(self) -> Iterator[Item]:
+        return iter(self._items)
+
+    def __contains__(self, item: object) -> bool:
+        return item in self._items
+
+    def __getitem__(self, index: int) -> Item:
+        return self._items[index]

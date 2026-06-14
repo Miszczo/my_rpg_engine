@@ -8,8 +8,8 @@ from engine.items import Armor, Sword
 
 
 def test_scenario_01_create_characters_different_classes(
-    warrior, mage, archer, healer
-):
+    warrior: Warrior, mage: Mage, archer: Archer, healer: Healer
+) -> None:
     """Scenario 1: creating characters of different classes."""
     assert isinstance(warrior, Warrior)
     assert isinstance(mage, Mage)
@@ -17,7 +17,9 @@ def test_scenario_01_create_characters_different_classes(
     assert isinstance(healer, Healer)
 
 
-def test_scenario_02_base_statistics(warrior, mage, archer, healer):
+def test_scenario_02_base_statistics(
+    warrior: Warrior, mage: Mage, archer: Archer, healer: Healer
+) -> None:
     """Scenario 2: verify default base statistics."""
     assert warrior.max_hp == 120 and warrior.strength == 14 and warrior.defense == 8
     assert mage.max_hp == 80 and mage.strength == 8 and mage.defense == 5
@@ -26,14 +28,32 @@ def test_scenario_02_base_statistics(warrior, mage, archer, healer):
     assert healer.max_hp == 100 and healer.mana == 120
 
 
-def test_scenario_07_insufficient_mana_raises_error(healer, warrior):
-    """Scenario 7: insufficient mana raises InsufficientStatsError."""
+def test_scenario_07_insufficient_mana_raises_error(
+    healer: Healer, warrior: Warrior, mage: Mage
+) -> None:
+    """Scenario 7: insufficient mana raises error or falls back to basic attack."""
     healer.mana = 5
     with pytest.raises(InsufficientStatsError):
         healer.heal_ally(warrior)
 
+    healer.mana = healer.max_mana
+    warrior.take_damage(30)
+    hp_before = warrior.hp
+    mana_before = healer.mana
+    healed = healer.heal_ally(warrior)
+    assert healed == warrior.max_hp - hp_before
+    assert warrior.hp == warrior.max_hp
+    assert healer.mana == mana_before - healer.HEAL_ALLY_MANA_COST
 
-def test_scenario_09_take_damage_applies_defense(warrior):
+    mage.mana = 10
+    mana_before = mage.mana
+    action, damage = mage.special_attack()
+    assert action == "Basic Attack"
+    assert damage == mage.attack_power
+    assert mage.mana == mana_before
+
+
+def test_scenario_09_take_damage_applies_defense(warrior: Warrior) -> None:
     """Scenario 9: take_damage subtracts defense from raw damage."""
     warrior.hp = warrior.max_hp
     actual = warrior.take_damage(30)
@@ -41,7 +61,9 @@ def test_scenario_09_take_damage_applies_defense(warrior):
     assert warrior.hp == warrior.max_hp - 22
 
 
-def test_scenario_10_effective_attack_power_and_defense(warrior):
+def test_scenario_10_effective_attack_power_and_defense(
+    warrior: Warrior,
+) -> None:
     """Scenario 10: attack_power and defense include equipment bonuses."""
     base_attack = warrior.attack_power
     base_defense = warrior.defense
@@ -57,7 +79,9 @@ def test_scenario_10_effective_attack_power_and_defense(warrior):
     assert warrior.attack_power > base_attack
 
 
-def test_scenario_13_character_string_representations(warrior):
+def test_scenario_13_character_string_representations(
+    warrior: Warrior,
+) -> None:
     """Scenario 13: __str__ and __repr__ provide readable representations."""
     text = str(warrior)
     assert warrior.name in text
@@ -65,7 +89,9 @@ def test_scenario_13_character_string_representations(warrior):
     assert repr(warrior).startswith("Warrior(")
 
 
-def test_scenario_14_polymorphic_special_attack(warrior, mage, archer):
+def test_scenario_14_polymorphic_special_attack(
+    warrior: Warrior, mage: Mage, archer: Archer
+) -> None:
     """Scenario 14: polymorphism via special_attack on heterogeneous list."""
     characters: list[Character] = [warrior, mage, archer]
     results = [character.special_attack() for character in characters]
@@ -76,7 +102,7 @@ def test_scenario_14_polymorphic_special_attack(warrior, mage, archer):
     assert all(isinstance(damage, int) and damage > 0 for _, damage in results)
 
 
-def test_scenario_15_inheritance_isinstance_issubclass():
+def test_scenario_15_inheritance_isinstance_issubclass() -> None:
     """Scenario 15: inheritance checks with isinstance and issubclass."""
     warrior = Warrior("Check")
     assert isinstance(warrior, Warrior)

@@ -1,4 +1,4 @@
-## ⚔️ my_rpg_engine
+# ⚔️ my_rpg_engine
 
 ## 1. Opis projektu
 
@@ -16,17 +16,17 @@
 
 | Nazwa klasy / Typ     | Krótki opis (1–2 zdania)                                                                                                      | Główne atrybuty (przykłady)                                         | Główne metody (przykłady)                                               |
 | --------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| `Character` (ABC)     | Abstrakcyjna baza dla wszystkich postaci; przechowuje HP, poziom, XP i ekwipunek oraz wspólne mechaniki żywotności i poziomów. | `name`, `_id`, `_level`, `_xp`, `max_hp`, `_base_strength`, `inventory` | `char_class()`, `special_attack()`, `take_damage()`, `heal()`, `gain_xp()` |
-| `Warrior`             | Postać walcząca wręcz o podwyższonych wartościach HP i siły; koncentruje się na atakach fizycznych.                         | dziedziczy z `Character`, zwiększone `max_hp`, `strength`            | `special_attack()` (np. `Heroic Strike`)                                  |
+| `Character` (ABC)     | Abstrakcyjna baza dla wszystkich postaci; przechowuje HP, poziom, XP i ekwipunek oraz wspólne mechaniki żywotności i poziomów. | `name`, `_id`, `_level`, `_xp`, `max_hp`, `_base_strength`, `inventory` | `char_class()`, `special_attack()`, `take_damage()`, `heal()`, `use_potion()`, `gain_xp()` |
+| `Warrior`             | Postać walcząca wręcz o podwyższonych wartościach HP i siły; koncentruje się na atakach fizycznych.                         | dziedziczy z `Character`, `max_hp=120`, `strength=14`, `defense=8`   | `special_attack()` (np. `Heroic Strike`)                                  |
 | `Mage`                | Postać magiczna z pulą many; wykonuje potężne ataki magiczne kosztem many.                                                   | dziedziczy z `Character`, `mana`, `max_mana`                         | `special_attack()` (np. `Fireball`), `mana` property                      |
-| `Archer`              | Postać dystansowa z balansem między siłą a mobilnością; korzysta ze sprzętu dystansowego.                                     | dziedziczy z `Character`, `range`, `dexterity`                       | `special_attack()` (np. `Piercing Shot`)                                  |
-| `Healer`              | Postać wsparcia z umiejętnościami leczącymi i (opcjonalnie) pulą many; może leczyć sojuszników.                                | dziedziczy z `Character`, `mana`, `heal_power`                       | `special_attack()`, `heal_ally()`                                         |
+| `Archer`              | Postać dystansowa z balansem siły i wytrzymałości; specjalizuje się w atakach dystansowych.                                   | dziedziczy z `Character`, `max_hp=90`, `strength=12`                 | `special_attack()` (np. `Piercing Shot`)                                  |
+| `Healer`              | Postać wsparcia z pulą many; leczy sojuszników i zadaje obrażenia magiczne.                                                    | dziedziczy z `Character`, `mana`, `max_mana`                         | `special_attack()` (np. `Holy Smite`), `heal_ally()`                      |
 | `Item` (ABC)          | Abstrakcyjna baza dla wszystkich przedmiotów; definiuje wspólny interfejs oraz metadane przedmiotu.                           | `name`, `value`, `rarity`, `weight`, `_id`                           | `item_type()`, `use_description()`, `__repr__()`, `__eq__()`               |
 | `Weapon` (ABC)        | Broń z wartością obrażeń i mechaniką wytrzymałości wpływającą na zadawane obrażenia.                                         | `damage`, `_durability`, `weight`                                    | `is_broken` property, `degrade()`, `calculate_effective_damage()`         |
-| `Sword`               | Konkretna broń biała (przykładowo `Iron Sword`) z domyślnymi parametrami obrażeń.                                             | dziedziczy z `Weapon`, domyślny `damage`                              | `use()`                                                                   |
-| `Staff`               | Broń magiczna typu `Staff` z dodatkowym kosztem many przy użyciu specjalnych ataków.                                         | dziedziczy z `Weapon`, `mana_cost`                                    | `use()`                                                                   |
-| `Armor`               | Zbroja zwiększająca obronę; ma przypisany slot (`head`, `chest`, `legs`).                                                   | `defense`, `slot`, `weight`                                           | `equip()`, `unequip()`                                                    |
-| `Potion`              | Przedmiot konsumpcyjny przywracający HP lub manę (różne typy mikstur).                                                        | `heal_amount`, `mana_restore`, `rarity`                              | `use()`                                                                   |
+| `Sword`               | Konkretna broń biała (np. `Iron Sword`) z domyślnymi parametrami obrażeń.                                                     | dziedziczy z `Weapon`, domyślny `damage=15`                           | `item_type()`, `use_description()`                                        |
+| `Staff`               | Broń magiczna z dodatkowym kosztem many (`mana_cost`) przy atakach specjalnych maga.                                          | dziedziczy z `Weapon`, `damage=20`, `mana_cost`                       | `item_type()`, `use_description()`                                        |
+| `Armor`               | Zbroja zwiększająca obronę; ma przypisany slot (`head`, `chest`, `legs`). Zakładana przez `Inventory.equip_armor()`.         | `defense`, `slot`, `weight`                                           | `item_type()`, `use_description()`                                        |
+| `Potion`              | Przedmiot konsumpcyjny przywracający HP lub manę; zużywany przez `Character.use_potion()`.                                    | `heal_amount`, `mana_restore`, `rarity`                              | `item_type()`, `use_description()`                                        |
 | `Inventory`           | Kontener przedmiotów postaci z ograniczoną pojemnością; obsługuje zakładanie sprzętu.                                       | `_items` (lista), `capacity`, `equipped_weapon`, `equipped_armor`     | `add()`, `remove()`, `equip_weapon()`, `equip_armor()`, `get_defense()`, `get_damage()`, dundery (`__len__`, `__iter__`, `__contains__`, `__getitem__`) |
 | `BattleLog` (@dataclass) | Struktura zapisu pojedynczej akcji w bitwie (ułatwia audyt i testowanie).                                                  | `turn`, `attacker`, `action`, `damage`, `target`, `target_hp_after`  | (dane strukturalne; brak metod specjalnych)                                |
 | `Battle`              | Silnik turowej walki między dwoma `Character`; wykonuje tury, zapisuje `BattleLog` i rozstrzyga zwycięzcę.                    | `attacker`, `defender`, `turn`, `logs`                                | `execute_turn(use_special=False)`, `auto_battle(max_turns=20)`, `__len__()` |
@@ -37,8 +37,8 @@
 | `GameError` (wyjątek) | Bazowy wyjątek projektu; punkt rozszerzeń dla specyficznych błędów domenowych.                                                | —                                                                   | —                                                                        |
 | `InventoryFullError`, `InsufficientStatsError`, `InvalidItemError` | Specjalizowane wyjątki pochodne od `GameError` używane do walidacji operacji. | —                                                                   | —                                                                        |
 | `CharacterFactory`    | Fabryka upraszczająca tworzenie postaci z domyślnym ekwipunkiem i ustawieniami startowymi.                                    | (metody statyczne/fabryczne)                                         | `create_warrior()`, `create_mage()`, `create_archer()`, `create_healer()` |
-| `EventLogger`         | Centralny rejestr zdarzeń i komunikatów (separacja logiki od prezentacji).                                                   | `_logs`                                                              | `log()`, `get_logs()`                                                     |
-| `GameWorld`           | Warstwa wyższego poziomu łącząca postacie, questy i bitwy; zarządza życiem świata gry i interakcjami.                          | `_characters`, `_quests`, `_battles`                                | `add_character()`, `start_battle()`, `complete_quest()`, `report()`, dundery (`__getitem__`, `__contains__`, `__len__`, `__iter__`) |
+| `EventLogger`         | Centralny rejestr zdarzeń i komunikatów (separacja logiki od prezentacji).                                                   | `_events`                                                            | `log()`, `get_events()`, `save_to_file()`                                 |
+| `GameWorld`           | Warstwa wyższego poziomu łącząca postacie, questy i bitwy; zarządza życiem świata gry i interakcjami.                          | `_characters`, `_quests`, `_battles`                                | `add_character()`, `add_quest()`, `start_battle()`, `complete_quest()`, `report()`, dundery (`__getitem__`, `__contains__`, `__len__`, `__iter__`) |
 
 ## 4. Relacje między klasami
 
@@ -74,7 +74,7 @@ Każda relacja została dobrana wg znaczenia semantycznego: kompozycja dla silne
 | **Abstrakcja**           | `Character` (metody `char_class()`, `special_attack()`)    | Wymusza wspólny interfejs dla różnych klas postaci.                                                       |
 | **Enkapsulacja**         | `Weapon` (`_durability`), `Character` (`_xp`, `_level`)    | Ukrywanie stanu i kontrolowany dostęp przez property/settery i metody (walidacja, clamp HP).              |
 | **Dziedziczenie**        | `Character` → `Warrior`/`Mage`/`Archer`/`Healer`           | Dziedziczenie cech i zachowań, możliwość nadpisania metod (override).                                     |
-| **Polimorfizm**          | `Battle` wywołuje `attack()`/`special_attack()`            | Ta sama metoda wywoływana na różnych typach obiektów, różne implementacje realizują specyficzne zachowania. |
+| **Polimorfizm**          | `Battle` wywołuje `attack_power` / `special_attack()`      | Ta sama metoda wywoływana na różnych typach obiektów, różne implementacje realizują specyficzne zachowania. |
 | **Przeciążanie operatorów / dundery** | `Inventory` (`__len__`, `__iter__`, `__contains__`, `__getitem__`) | Ułatwia użycie kolekcji jak natywnych typów Pythona (len, iteracja, sprawdzanie zawartości).               |
 | **Wyjątki**              | `GameError` i podklasy (`InventoryFullError`, `InvalidItemError`) | Definiowanie i obsługa błędów domenowych, walidacja operacji i komunikacja o nieprawidłowościach.         |
 | **Enumy**                | `Rarity`, `QuestStatus`                                   | Bezpieczne, czytelne i jednoznaczne reprezentowanie stałych stanów i kategorii w systemie.                |
@@ -112,3 +112,11 @@ python main.py
 ```bash
 pytest
 ```
+
+## 9. Historia zmian
+
+- **2026-06-14** — Scalono testy do dokładnie 15 scenariuszy §2.6 (asercje z `test_justification.py` w scenariuszach 7, 8, 11, 12); docstringi `EventLogger` przepisano na format Google; dodano `JUSTIFICATION.md` §7 (`__hash__`).
+- **2026-06-14** — Zaktualizowano tabelę klas (§3) i mechanizmy OOP (§7), aby opisy były zgodne z implementacją w `engine/`: usunięto nieistniejące atrybuty (`Archer.range`, `Healer.heal_power`), metody (`Armor.equip`, `Sword.use`) oraz poprawiono nazwy w `EventLogger` (`_events`, `get_events()`).
+- **2026-06-14** — Dodano `use_potion()` do metod `Character`, `add_quest()` do `GameWorld` oraz sekcję **Historia zmian** (§9).
+- **Etap 3** — Dodano sekcję **Uruchomienie** (§8), `CharacterFactory` (`engine/factory.py`) i `EventLogger` (`engine/logger.py`); uzasadnienie rozszerzeń w `JUSTIFICATION.md` §2, §5–§6.
+- **Etap 2** — Moduł walki zaimplementowano jako `engine/combat.py` (mapowanie 1:1 do `battle.py` ze specyfikacji); uzasadnienie w `JUSTIFICATION.md` §1.

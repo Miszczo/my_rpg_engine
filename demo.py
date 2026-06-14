@@ -80,13 +80,16 @@ def main() -> None:
         use_special = battle.attacker is mage
         battle.execute_turn(use_special=use_special)
 
-    if warrior.hp < warrior.max_hp:
-        potion_name = battle_potion.name
-        healed = warrior.use_potion(battle_potion)
-        logger.log(
-            f"Mid-battle: {warrior.name} used {potion_name}, "
-            f"healed {healed} HP (now {warrior.hp}/{warrior.max_hp})"
-        )
+    if warrior.hp >= warrior.max_hp:
+        warrior.take_damage(25)
+
+    hp_before = warrior.hp
+    potion_name = battle_potion.name
+    healed = warrior.use_potion(battle_potion)
+    logger.log(
+        f"Mid-battle: {warrior.name} used {potion_name}, "
+        f"healed {healed} HP (was {hp_before}, now {warrior.hp}/{warrior.max_hp})"
+    )
 
     winner = battle.auto_battle(max_turns=20)
     _log_battle(logger, battle, winner)

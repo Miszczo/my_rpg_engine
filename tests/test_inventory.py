@@ -3,10 +3,12 @@
 import pytest
 
 from engine.exceptions import InvalidItemError, InventoryFullError
+from engine.characters import Warrior
+from engine.inventory import Inventory
 from engine.items import Armor, Potion, Sword
 
 
-def test_scenario_03_equip_and_remove_items(warrior):
+def test_scenario_03_equip_and_remove_items(warrior: Warrior) -> None:
     """Scenario 3: equipping and removing items from inventory."""
     sword = next(item for item in warrior.inventory if isinstance(item, Sword))
     armor = Armor("Chain Mail", defense=4)
@@ -23,7 +25,7 @@ def test_scenario_03_equip_and_remove_items(warrior):
     assert warrior.inventory.equipped_armor is None
 
 
-def test_scenario_04_stats_change_after_equipping(warrior):
+def test_scenario_04_stats_change_after_equipping(warrior: Warrior) -> None:
     """Scenario 4: equipping items changes effective combat stats."""
     sword = next(item for item in warrior.inventory if isinstance(item, Sword))
     armor = Armor("Plate", defense=5)
@@ -39,13 +41,17 @@ def test_scenario_04_stats_change_after_equipping(warrior):
     assert warrior.defense == defense_before + armor.defense
 
 
-def test_scenario_05_full_inventory_raises_inventory_full_error(full_inventory):
+def test_scenario_05_full_inventory_raises_inventory_full_error(
+    full_inventory: Inventory,
+) -> None:
     """Scenario 5: adding to a full inventory raises InventoryFullError."""
     with pytest.raises(InventoryFullError):
         full_inventory.add(Potion(name="Overflow"))
 
 
-def test_scenario_12_invalid_equip_raises_invalid_item_error(warrior):
+def test_scenario_12_invalid_equip_raises_invalid_item_error(
+    warrior: Warrior,
+) -> None:
     """Scenario 12: invalid equip operations raise InvalidItemError."""
     potion = Potion()
     warrior.inventory.add(potion)
@@ -56,3 +62,7 @@ def test_scenario_12_invalid_equip_raises_invalid_item_error(warrior):
     outside_sword = Sword()
     with pytest.raises(InvalidItemError):
         warrior.inventory.equip_weapon(outside_sword)
+
+    outside_potion = Potion(name="Not In Bag")
+    with pytest.raises(InvalidItemError):
+        warrior.inventory.remove(outside_potion)
